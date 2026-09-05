@@ -1,0 +1,43 @@
+# dev : https://docs.docker.com/guides/angular/develop/
+# prod : https://docs.docker.com/guides/angular/containerize/
+name: "matchmaker_node"
+
+# create beforehand
+networks:
+  net:
+    name: "web2mp3_v2_angular"
+    # external: true
+
+services:
+  node:
+    container_name: "matchmaker_node"
+    build:
+      context: "./"
+      target: "angular_image"
+    image: "web2mp3_v2/angular"
+    networks:
+    - "net"
+    working_dir: "/app"
+    user: "1000:1000"
+    ### SETUP ###
+    # volumes:
+    # - "./:/app"
+    # command: "bash"
+    ### DEV ###
+    volumes:
+    - "./:/app"
+    ports:
+    - "4200:4200"
+    command:
+    - "npm"
+    - "start"
+    # - "--"
+    # - "--host=0.0.0.0"
+    ### END DEV ###
+    ### PROD ###
+    # command:
+    # - "bash"
+    # - "-c"
+    # - "rm -f /app/public/hot && npm run build"
+    ### END PROD ###
+    # restart: "unless-stopped"
