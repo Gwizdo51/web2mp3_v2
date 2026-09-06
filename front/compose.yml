@@ -1,6 +1,6 @@
 # dev : https://docs.docker.com/guides/angular/develop/
 # prod : https://docs.docker.com/guides/angular/containerize/
-name: "matchmaker_node"
+name: "web2mp3_v2_angular"
 
 # create beforehand
 networks:
@@ -10,7 +10,7 @@ networks:
 
 services:
   node:
-    container_name: "matchmaker_node"
+    container_name: "web2mp3_v2_angular"
     build:
       context: "./"
       target: "angular_image"

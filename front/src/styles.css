@@ -1,3 +1,21 @@
 /* You can add global styles to this file, and also import other style files */
 
+@import url('https://fonts.googleapis.com/css2?family=Montserrat&display=swap');
 @import 'tailwindcss';
+
+@theme inline {
+    --font-montserrat: "Montserrat", sans-serif;
+
+    /* colors */
+    /* --color-primary: #FF4D6D; */
+    /* --color-primary: var(--color-rose-500); */
+    /* --color-secondary: #8B7CFF; */
+    /* --color-secondary: var(--color-fuchsia-500); */
+    /* --color-background: #0F172A; */
+    /* --color-background: var(--color-slate-950); */
+    /* --color-surface: #1E293B; */
+    /* --color-surface: var(--color-slate-800); */
+    /* --color-border: #334155; */
+    /* --color-textprimary: #F9FAFB; */
+    /* --color-textsecondary: #94A3B8; */
+}
