@@ -72,6 +72,21 @@ COPY --link frankenphp/conf.d/20-app.dev.ini $PHP_INI_DIR/app.conf.d/
 
 CMD [ "frankenphp", "run", "--config", "/etc/frankenphp/Caddyfile", "--watch" ]
 
+# Messenger worker image
+FROM frankenphp_dev AS frankenphp_workers
+# install supervisor and ffmpeg
+RUN apt-get update
+RUN apt-get install -y supervisor ffmpeg
+RUN rm -rf /var/cache/apt/archives /var/lib/apt/lists/*
+# # install yt-dlp
+RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux -o /usr/local/bin/yt-dlp
+# allow anyone to run yt-dlp
+# RUN chmod a+x /usr/local/bin/yt-dlp
+# add Deno JS runtime (yt-dlp requirement)
+COPY --link --from=denoland/deno:bin-2.5.6 /deno /usr/local/bin/deno
+# run supervisor in the foreground
+CMD ["supervisord", "-nc", "/etc/supervisor/conf.d/queue_worker.conf"]
+# CMD ["bin/console", "list"]
 
 # Builder for the prod FrankenPHP image
 FROM frankenphp_base AS frankenphp_prod_builder

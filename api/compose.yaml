@@ -49,6 +49,21 @@ services:
       protocol: udp
     # restart: unless-stopped
 
+  web2mp3_v2_workers:
+    container_name: "web2mp3_v2_workers"
+    build:
+      context: "."
+      target: "frankenphp_workers"
+    image: "web2mp3_v2/workers"
+    user: "1000:1000"
+    networks:
+    - "net"
+    volumes:
+    - "./:/app"
+    - "/srv/docker_data/web2mp3_v2/database:/app/database"
+    - "./php.ini:/usr/local/etc/php/php.ini"
+    - "./queue_worker.conf:/etc/supervisor/conf.d/queue_worker.conf:ro"
+
 # Mercure is installed as a Caddy module, prevent the Flex recipe from installing another service
 ###> symfony/mercure-bundle ###
 ###< symfony/mercure-bundle ###
@@ -58,6 +73,9 @@ services:
 #   caddy_config:
 ###> symfony/mercure-bundle ###
 ###< symfony/mercure-bundle ###
+###> doctrine/doctrine-bundle ###
+  # database_data:
+###< doctrine/doctrine-bundle ###
 
 ###> doctrine/doctrine-bundle ###
   # database:
@@ -76,9 +94,4 @@ services:
   #     - database_data:/var/lib/postgresql/data:rw
       # You may use a bind-mounted host directory instead, so that it is harder to accidentally remove the volume and lose all your data!
       # - ./docker/db/data:/var/lib/postgresql/data:rw
-###< doctrine/doctrine-bundle ###
-
-# volumes:
-###> doctrine/doctrine-bundle ###
-  # database_data:
 ###< doctrine/doctrine-bundle ###

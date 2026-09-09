@@ -11,7 +11,7 @@ use App\State\TestProvider;
 // use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ApiResource(
-    mercure: true,
+    // mercure: true,
     description: 'Resource to test stuff',
     operations: [
         new Get(

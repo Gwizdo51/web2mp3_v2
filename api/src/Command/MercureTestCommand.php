@@ -23,7 +23,7 @@ class MercureTestCommand {
     public function __invoke(SymfonyStyle $io) {
         dump('default URI', $this->defaultUri);
         $this->hub->publish(new Update(
-            topics: "{$this->defaultUri}/downloads/123abc",
+            topics: 'https://api.web2mp3-v2.100.124.238.99.nip.io/downloads',
             data: json_encode([
                 'success' => true,
             ]),
