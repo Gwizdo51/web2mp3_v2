@@ -18,7 +18,12 @@ export class Processing implements OnInit, OnDestroy {
     public constructor() {
         effect(() => {
             const download = <Download>this.download();
-            this.displayedText.set(download.state === 'waiting' ? 'In Queue ...' : 'Processing ...');
+            if (download.state === 'waiting') {
+                this.displayedText.set(`In queue (position: ${download.queuePosition}) ...`);
+            }
+            else {
+                this.displayedText.set('Processing ...');
+            }
         });
     }
 

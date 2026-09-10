@@ -6,6 +6,7 @@ use App\ApiResource\DownloadRequest;
 use App\Entity\Download;
 use App\Enum\DownloadQuality;
 use App\Enum\DownloadState;
+use App\Message\BroadcastQueueUpdateMessage;
 use App\Message\ConvertVideoToAudioMessage;
 use App\Message\DeleteFileMessage;
 use App\Repository\DownloadRepository;
@@ -52,8 +53,13 @@ class DownloadService {
             $downloadRequest->id = $sameDownload->getId()->toString();
             $downloadRequest->state = $sameDownload->getState();
             $downloadRequest->fileName = $sameDownload->getFileName();
+            // get the queue position of the download message
+            $queuePosition = $this->downloadRepository->getQueuePosition($sameDownload->getCreatedAt());
+            dump('queue position :', $queuePosition);
+            $downloadRequest->queuePosition = $queuePosition;
         }
         else {
+            $now = new DateTimeImmutable();
             // create and save a new instance of Download in the database
             $newDownload = new Download();
             $newDownload->setId(Uuid::v7());
@@ -61,12 +67,16 @@ class DownloadService {
             $newDownload->setFormat($downloadRequest->format);
             $newDownload->setQuality($downloadRequest->quality);
             $newDownload->setState(DownloadState::Waiting);
-            $newDownload->setCreatedAt(new DateTimeImmutable());
+            $newDownload->setCreatedAt($now);
             $this->em->persist($newDownload);
             $this->em->flush();
             // update the $downloadRequest
             $downloadRequest->id = $newDownload->getId()->toString();
             $downloadRequest->state = $newDownload->getState();
+            // get the queue position of the download message
+            $queuePosition = $this->downloadRepository->getQueuePosition($now);
+            dump('queue position :', $queuePosition);
+            $downloadRequest->queuePosition = $queuePosition;
             // dispatch the message to download the link
             $this->bus->dispatch(new ConvertVideoToAudioMessage($downloadRequest));
         }
@@ -75,22 +85,18 @@ class DownloadService {
 
     public function handleConvertVideoToAudio(DownloadRequest $downloadRequest): void {
         dump('DownloadService->handleConvertVideoToAudio called');
-        $topic = "{$this->defaultUri}/downloads/{$downloadRequest->id}";
         // retrieve the download from the database
         /** @var Download */
         $download = $this->downloadRepository->find(Uuid::fromString($downloadRequest->id));
         dump('download from database:', $download);
         // set the state to "running"
         $download->setState(DownloadState::Running);
-        $this->em->flush();
-        // notify the start of the process with Mercure
         $downloadRequest->state = DownloadState::Running;
-        $jsonContent = $this->serializer->serialize($downloadRequest, 'json', ['groups' => ['download_request:get']]);
-        dump('broadcasting $jsonContent', $jsonContent);
-        $this->hub->publish(new Update(
-            topics: $topic,
-            data: $jsonContent,
-        ));
+        $this->em->flush();
+        // broadcast the queue update to all waiting downloads
+        $this->bus->dispatch(new BroadcastQueueUpdateMessage());
+        // notify the start of the process with Mercure
+        $this->broadcastUpdate($downloadRequest);
         // download the file with yt-dlp
         dump('processing download');
         $this->filesystem->mkdir("/app/public/storage/{$downloadRequest->id}");
@@ -122,16 +128,26 @@ class DownloadService {
             $download->setState(DownloadState::Failed);
             $download->setError($downloadProcess->getErrorOutput());
         }
+        // sleep(10);
+        // $this->filesystem->dumpFile("/app/public/storage/{$downloadRequest->id}/test.txt", "test\n");
+        // $downloadRequest->state = DownloadState::Succeeded;
+        // $download->setState(DownloadState::Succeeded);
+        // $downloadRequest->fileName = 'test.txt';
+        // $download->setFileName('test.txt');
         $this->em->flush();
+        $this->broadcastUpdate($downloadRequest);
+    }
+
+    protected function broadcastUpdate(DownloadRequest $downloadRequest) {
         $jsonContent = $this->serializer->serialize($downloadRequest, 'json', ['groups' => ['download_request:get']]);
-        dump('broadcasting $jsonContent', $jsonContent);
+        dump('broadcasting update', $jsonContent);
         $this->hub->publish(new Update(
-            topics: $topic,
+            topics: "{$this->defaultUri}/downloads/{$downloadRequest->id}",
             data: $jsonContent,
         ));
     }
 
-    public function handleDeleteFile(string $id) {
+    public function handleDeleteFile(string $id): void {
         dump('handleDeleteFile called', $id);
         $this->filesystem->remove("/app/public/storage/{$id}");
         // update the state of the download in the database
@@ -139,5 +155,23 @@ class DownloadService {
         $download = $this->downloadRepository->find(Uuid::fromString($id));
         $download->setState(DownloadState::Deleted);
         $this->em->flush();
+    }
+
+    public function handleBroadcastQueueUpdate(): void {
+        dump('DownloadService->handleBroadcastQueueUpdate called');
+        // retrieve all the downloads in waiting state, along with their queue positions
+        $queuePositionsArray = $this->downloadRepository->getWaitingDownloadsQueuePositions();
+        dump('queue positions: ', $queuePositionsArray);
+        foreach ($queuePositionsArray as $queuePositionArray) {
+            // create a DownloadRequest object and broadcast it via Mercure
+            /** @var Uuid $id */
+            $id = $queuePositionArray['download']['id'];
+            $downloadRequest = new DownloadRequest(
+                id: $id->toString(),
+                state: $queuePositionArray['download']['state'],
+                queuePosition: $queuePositionArray['queuePosition'],
+            );
+            $this->broadcastUpdate($downloadRequest);
+        }
     }
 }

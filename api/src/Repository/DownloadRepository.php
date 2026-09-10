@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\ApiResource\DownloadRequest;
 use App\Entity\Download;
 use App\Enum\DownloadState;
+use DateTimeImmutable;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -59,5 +60,41 @@ class DownloadRepository extends ServiceEntityRepository {
             ->getQuery()
             ->getOneOrNullResult()
         ;
+    }
+
+    public function getQueuePosition(DateTimeImmutable $createdAt): int {
+        $qb = $this->createQueryBuilder('d');
+        return $qb
+            ->andWhere('d.createdAt < :created_at')
+            ->setParameter('created_at', $createdAt)
+            ->andWhere($qb->expr()->in('d.state', [
+                DownloadState::Waiting->value,
+                DownloadState::Running->value,
+            ]))
+            ->select('COUNT(d.id)')
+            ->getQuery()
+            ->getSingleScalarResult()
+        ;
+    }
+
+    public function getWaitingDownloadsQueuePositions(): array {
+        $qb = $this->createQueryBuilder('d2');
+        $waitingState = DownloadState::Waiting->value;
+        $subquery = $qb
+            ->andWhere('d2.createdAt < d1.createdAt')
+            ->andWhere($qb->expr()->in('d2.state', [
+                DownloadState::Waiting->value,
+                DownloadState::Running->value,
+            ]))
+            ->select('COUNT(d2.id)')
+            ->getDQL()
+        ;
+        $query = $this->createQueryBuilder('d1')
+            ->select('d1 download')
+            ->addSelect("({$subquery}) queuePosition")
+            ->andWhere("d1.state = '{$waitingState}'")
+            ->getQuery()
+        ;
+        return $query->getArrayResult();
     }
 }

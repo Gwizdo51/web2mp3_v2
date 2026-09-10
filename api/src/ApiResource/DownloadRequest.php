@@ -69,5 +69,10 @@ class DownloadRequest {
             'download_request:get',
         ])]
         public ?string $error = null,
+
+        #[Groups([
+            'download_request:get',
+        ])]
+        public ?int $queuePosition = null,
     ) {}
 }

@@ -11,6 +11,6 @@ From the `front` folder:
 
 - [x] Add new "deleted" state for downloads which files have been deleted
 - [x] Redirect to same download if same link + format + quality + not deleted yet
+- [x] Add queue position broadcasting
 - [ ] Add scheduler to update yt-dlp
-- [ ] Add queue position broadcasting
 - [ ] Set up logging
