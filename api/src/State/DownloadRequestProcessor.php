@@ -16,7 +16,7 @@ class DownloadRequestProcessor implements ProcessorInterface {
     ) {}
 
     public function process(mixed $data, Operation $operation, array $uriVariables = [], array $context = []): mixed {
-        dump('DownloadRequestProcessor->process called', $data);
+        // dump('DownloadRequestProcessor->process called', $data);
         return $this->downloadService->processDownloadRequest($data);
     }
 }

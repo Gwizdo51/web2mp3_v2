@@ -1,9 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { RequestFormModel } from '../models/request-form-model';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { RequestReply } from '../models/request-reply';
 import { Download } from '../models/download';
 
 @Injectable({
@@ -14,8 +13,8 @@ export class DownloadService {
         protected readonly http: HttpClient,
     ) {}
 
-    public postDownloadRequest(requestFormModel: RequestFormModel): Observable<RequestReply> {
-        return this.http.post<RequestReply>(
+    public postDownloadRequest(requestFormModel: RequestFormModel): Observable<Download> {
+        return this.http.post<Partial<Download>>(
             environment.apiUrl + '/api/download_requests',
             requestFormModel,
             {
@@ -24,7 +23,7 @@ export class DownloadService {
                     'accept': 'application/ld+json',
                 },
             },
-        );
+        ).pipe(map((downloadResponse) => new Download(downloadResponse)));
     }
 
     public getHubEventSource(id: string): EventSource {

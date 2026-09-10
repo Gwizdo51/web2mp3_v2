@@ -20,7 +20,6 @@ export class Result implements OnInit, AfterViewInit {
 
     public ngOnInit(): void {
         this.fileUrl.set(this.downloadService.getFileUrl(<Download>this.download()));
-        // console.dir(this.downloadLink()?.nativeElement);
     }
 
     public ngAfterViewInit(): void {
@@ -30,7 +29,6 @@ export class Result implements OnInit, AfterViewInit {
     }
 
     protected onDownloadLinkClick() {
-        console.log('download link clicked');
         this.downloadLink()?.nativeElement.click();
     }
 

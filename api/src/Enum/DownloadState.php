@@ -7,4 +7,5 @@ enum DownloadState: string {
     case Running = 'running';
     case Failed = 'failed';
     case Succeeded = 'succeeded';
+    case Deleted = 'deleted';
 }

@@ -1,18 +1,18 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace App\Repository;
 
+use App\ApiResource\DownloadRequest;
 use App\Entity\Download;
+use App\Enum\DownloadState;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
  * @extends ServiceEntityRepository<Download>
  */
-class DownloadRepository extends ServiceEntityRepository
-{
-    public function __construct(ManagerRegistry $registry)
-    {
+class DownloadRepository extends ServiceEntityRepository {
+    public function __construct(ManagerRegistry $registry) {
         parent::__construct($registry, Download::class);
     }
 
@@ -40,4 +40,24 @@ class DownloadRepository extends ServiceEntityRepository
 //            ->getOneOrNullResult()
 //        ;
 //    }
+
+    public function findSameDownload(DownloadRequest $downloadRequest): ?Download {
+        $qb = $this->createQueryBuilder('d');
+        return $qb
+            ->andWhere('d.link = :link')
+            ->setParameter('link', $downloadRequest->link)
+            ->andWhere('d.format = :format')
+            ->setParameter('format', $downloadRequest->format)
+            ->andWhere('d.quality = :quality')
+            ->setParameter('quality', $downloadRequest->quality)
+            ->andWhere($qb->expr()->in('d.state', [
+                DownloadState::Waiting->value,
+                DownloadState::Running->value,
+                DownloadState::Succeeded->value,
+            ]))
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult()
+        ;
+    }
 }

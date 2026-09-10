@@ -9,7 +9,8 @@ From the `front` folder:
 
 ## TODO
 
-- [ ] Add new "deleted" state for downloads which files have been deleted
-- [ ] Redirect to same download if same link + format + quality
+- [x] Add new "deleted" state for downloads which files have been deleted
+- [x] Redirect to same download if same link + format + quality + not deleted yet
 - [ ] Add scheduler to update yt-dlp
 - [ ] Add queue position broadcasting
+- [ ] Set up logging

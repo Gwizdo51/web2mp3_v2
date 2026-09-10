@@ -41,12 +41,7 @@ export class Form {
                         // this.requestAccepted.emit(response);
                         globalThis.localStorage.setItem('format', field().value().format);
                         globalThis.localStorage.setItem('quality', field().value().quality);
-                        this.download.set({
-                            id: response.id,
-                            state: response.state,
-                            fileName: null,
-                            error: null,
-                        });
+                        this.download.set(response);
                         return;
                     }
                     catch (err: any) {

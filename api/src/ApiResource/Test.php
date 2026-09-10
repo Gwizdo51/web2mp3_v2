@@ -10,27 +10,27 @@ use App\State\TestProcessor;
 use App\State\TestProvider;
 // use Symfony\Component\Serializer\Attribute\Groups;
 
-#[ApiResource(
-    // mercure: true,
-    description: 'Resource to test stuff',
-    operations: [
-        new Get(
-            openapi: new Operation(
-                summary: 'Get',
-                description: 'Test get operation',
-                tags: ['Test'],
-            ),
-            uriTemplate: '/test',
-            provider: TestProvider::class,
-        ),
-        new Post(
-            uriTemplate: '/test',
-            processor: TestProcessor::class,
-        ),
-    ],
-    // normalizationContext: ['groups' => ['test:get']],
-    // denormalizationContext: ['groups' => ['test:set']],
-)]
+// #[ApiResource(
+//     // mercure: true,
+//     description: 'Resource to test stuff',
+//     operations: [
+//         new Get(
+//             openapi: new Operation(
+//                 summary: 'Get',
+//                 description: 'Test get operation',
+//                 tags: ['Test'],
+//             ),
+//             uriTemplate: '/test',
+//             provider: TestProvider::class,
+//         ),
+//         new Post(
+//             uriTemplate: '/test',
+//             processor: TestProcessor::class,
+//         ),
+//     ],
+//     // normalizationContext: ['groups' => ['test:get']],
+//     // denormalizationContext: ['groups' => ['test:set']],
+// )]
 class Test {
     public function __construct(
         // #[Groups(['test:get'])]
