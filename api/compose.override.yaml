@@ -16,6 +16,7 @@ services:
     #- /app/vendor
     - "./php.ini:/usr/local/etc/php/php.ini"
     - "/srv/docker_data/web2mp3_v2/database:/app/database"
+    - "/srv/docker_data/web2mp3_v2/storage:/app/public/storage"
     environment:
       FRANKENPHP_WORKER_CONFIG: watch
       FRANKENPHP_SITE_CONFIG: hot_reload

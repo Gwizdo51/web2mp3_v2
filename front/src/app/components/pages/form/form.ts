@@ -1,11 +1,11 @@
-import { Component, inject, output, signal } from '@angular/core';
+import { Component, inject, model, signal } from '@angular/core';
 import { form, FormField, FormRoot, pattern, required } from '@angular/forms/signals';
 import { RequestFormModel } from '../../../models/request-form-model';
 import { LucideCircleAlert, LucideLoaderCircle, } from '@lucide/angular';
 import { DownloadService } from '../../../services/download-service';
-import { RequestReply } from '../../../models/request-reply';
 import { firstValueFrom } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
+import { Download } from '../../../models/download';
 
 @Component({
     selector: 'app-form',
@@ -15,10 +15,11 @@ import { HttpErrorResponse } from '@angular/common/http';
 })
 export class Form {
     // public readonly requestModel = model.required<RequestFormModel>();
+    public readonly download = model.required<Download|null>();
     protected readonly requestModel = signal(new RequestFormModel());
     protected readonly formats: DownloadFormat[] = ['mp3', 'm4a', 'flac', 'wav', 'aac', 'alac', 'opus', 'vorbis'];
     protected readonly qualities: DownloadQuality[] = ['best', 'good', 'average', 'poor'];
-    protected readonly requestAccepted = output<RequestReply>();
+    // public readonly requestAccepted = output<RequestReply>();
     protected readonly downloadService = inject(DownloadService);
     protected readonly modelForm = form(
         this.requestModel,
@@ -37,7 +38,15 @@ export class Form {
                     try {
                         const response = await firstValueFrom(this.downloadService.postDownloadRequest(field().value()));
                         console.log('API response:', response);
-                        this.requestAccepted.emit(response);
+                        // this.requestAccepted.emit(response);
+                        globalThis.localStorage.setItem('format', field().value().format);
+                        globalThis.localStorage.setItem('quality', field().value().quality);
+                        this.download.set({
+                            id: response.id,
+                            state: response.state,
+                            fileName: null,
+                            error: null,
+                        });
                         return;
                     }
                     catch (err: any) {
@@ -75,4 +84,9 @@ export class Form {
             },
         },
     );
+
+    public reset() {
+        this.requestModel.set(new RequestFormModel());
+        this.modelForm().reset();
+    }
 }

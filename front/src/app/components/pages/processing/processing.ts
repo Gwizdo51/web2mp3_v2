@@ -1,4 +1,4 @@
-import { Component, inject, model, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, effect, inject, model, OnDestroy, OnInit, signal } from '@angular/core';
 import { LucideLoaderCircle } from '@lucide/angular';
 import { DownloadService } from '../../../services/download-service';
 import { Download } from '../../../models/download';
@@ -15,15 +15,24 @@ export class Processing implements OnInit, OnDestroy {
     protected eventSource: EventSource|null = null;
     protected readonly downloadService = inject(DownloadService);
 
+    public constructor() {
+        effect(() => {
+            const download = <Download>this.download();
+            this.displayedText.set(download.state === 'waiting' ? 'In Queue ...' : 'Processing ...');
+        });
+    }
+
     public ngOnInit(): void {
-        console.log('Processing.ngOnInit called');
         this.eventSource = this.downloadService.getHubEventSource(<string>this.download()?.id);
         this.eventSource.onmessage = (event) => {
-            console.log('message received', event);
+            const data = JSON.parse(event.data);
+            console.log('message received', data);
+            this.download.update((download) => download ? {...download, ...data} : null);
         };
     }
 
     public ngOnDestroy(): void {
-        console.log('Processing.ngOnDestroy called');
+        this.eventSource?.close();
+        this.eventSource = null;
     }
 }

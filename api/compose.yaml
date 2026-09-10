@@ -60,9 +60,10 @@ services:
     - "net"
     volumes:
     - "./:/app"
-    - "/srv/docker_data/web2mp3_v2/database:/app/database"
     - "./php.ini:/usr/local/etc/php/php.ini"
     - "./queue_worker.conf:/etc/supervisor/conf.d/queue_worker.conf:ro"
+    - "/srv/docker_data/web2mp3_v2/database:/app/database"
+    - "/srv/docker_data/web2mp3_v2/storage:/app/public/storage"
 
 # Mercure is installed as a Caddy module, prevent the Flex recipe from installing another service
 ###> symfony/mercure-bundle ###

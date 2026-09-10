@@ -62,4 +62,6 @@ http://:80 {
 	file_server {
 		hide *.php
 	}
+
+	header /storage/* Content-Disposition "attachment"
 }

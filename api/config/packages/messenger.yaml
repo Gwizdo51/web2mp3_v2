@@ -5,7 +5,15 @@ framework:
 
         transports:
             # https://symfony.com/doc/current/messenger.html#transport-configuration
-            async: '%env(MESSENGER_TRANSPORT_DSN)%'
+            # async: '%env(MESSENGER_TRANSPORT_DSN)%'
+            async_download:
+                dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+                options:
+                    queue_name: download
+            async_default:
+                dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+                options:
+                    queue_name: default
             # failed: 'doctrine://default?queue_name=failed'
             sync: 'sync://'
 

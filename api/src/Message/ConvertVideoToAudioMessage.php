@@ -5,7 +5,7 @@ namespace App\Message;
 use App\ApiResource\DownloadRequest;
 use Symfony\Component\Messenger\Attribute\AsMessage;
 
-#[AsMessage('async')]
+#[AsMessage('async_download')]
 final class ConvertVideoToAudioMessage {
     public function __construct(
         public DownloadRequest $downloadRequest,

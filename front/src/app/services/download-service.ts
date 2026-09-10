@@ -4,6 +4,7 @@ import { RequestFormModel } from '../models/request-form-model';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { RequestReply } from '../models/request-reply';
+import { Download } from '../models/download';
 
 @Injectable({
     providedIn: 'root',
@@ -27,8 +28,12 @@ export class DownloadService {
     }
 
     public getHubEventSource(id: string): EventSource {
-        const hub = new URL(environment.apiUrl + '/.well-known/mercure');
+        const hub = new URL(`${environment.apiUrl}/.well-known/mercure`);
         hub.searchParams.append('topic', `${environment.apiUrl}/downloads/${id}`);
         return new EventSource(hub);
+    }
+
+    public getFileUrl(download: Download) {
+        return `${environment.apiUrl}/storage/${download.id}/${download.fileName}`;
     }
 }
