@@ -2,11 +2,38 @@
 # Production environment override
 services:
   web2mp3_v2_api:
-    image: ${IMAGES_PREFIX:-}app-php-prod
+    container_name: "web2mp3_v2_api_prod"
+    env_file:
+    - path: ./.env.prod
+      required: false
+    - path: ./.env.prod.local
+      required: false
     build:
       context: .
       target: frankenphp_prod
+      args:
+        UID: "${UID:?}"
+        GID: "${GID:?}"
+    image: "web2mp3_v2/symfony-prod"
     environment:
       APP_SECRET: ${APP_SECRET}
       MERCURE_PUBLISHER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET}
       MERCURE_SUBSCRIBER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET}
+    # volumes:
+    # - "/srv/docker_data/web2mp3_v2/database:/app/database"
+    # - "/srv/docker_data/web2mp3_v2/storage:/app/public/storage"
+
+  web2mp3_v2_workers:
+    container_name: "web2mp3_v2_workers_prod"
+    env_file:
+    - path: "./.env.prod"
+      required: false
+    - path: "./.env.prod.local"
+      required: false
+    build:
+      context: "."
+      target: "frankenphp_prod_workers"
+      args:
+        UID: "${UID:?}"
+        GID: "${GID:?}"
+    image: "web2mp3_v2/workers-prod"

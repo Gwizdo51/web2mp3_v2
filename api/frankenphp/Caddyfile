@@ -11,7 +11,8 @@
 {$CADDY_EXTRA_CONFIG}
 
 # http://{$SERVER_NAME:localhost} {
-http://:80 {
+# :80 {
+{$CADDY_SERVER_NAME} {
 	log {
 		{$CADDY_SERVER_LOG_OPTIONS}
 		# Redact the authorization query parameter that can be set by Mercure
@@ -36,7 +37,8 @@ http://:80 {
 		subscriptions
 		# Extra directives
 		{$MERCURE_EXTRA_DIRECTIVES}
-		cors_origins http://debian-server:4200 https://web2mp3-v2.100.124.238.99.nip.io
+		# cors_origins http://debian-server:4200 https://web2mp3-v2.100.124.238.99.nip.io
+		{$MERCURE_CORS}
 	}
 
 	vulcain

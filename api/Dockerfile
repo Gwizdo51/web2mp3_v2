@@ -1,15 +1,19 @@
 #syntax=docker/dockerfile:1
 
 # Versions
-FROM dunglas/frankenphp:1-php8.5 AS frankenphp_upstream
+# FROM dunglas/frankenphp:1-php8.5 AS frankenphp_upstream
 
 # The different stages of this Dockerfile are meant to be built into separate images
 # https://docs.docker.com/build/building/multi-stage/#stop-at-a-specific-build-stage
 # https://docs.docker.com/reference/compose-file/build/#target
 
+ARG UID=1000
+ARG GID=1000
+
 
 # Base FrankenPHP image
-FROM frankenphp_upstream AS frankenphp_base
+# FROM frankenphp_upstream AS frankenphp_base
+FROM dunglas/frankenphp:1-php8.5 AS frankenphp_base
 
 SHELL ["/bin/bash", "-euxo", "pipefail", "-c"]
 
@@ -72,20 +76,29 @@ COPY --link frankenphp/conf.d/20-app.dev.ini $PHP_INI_DIR/app.conf.d/
 
 CMD [ "frankenphp", "run", "--config", "/etc/frankenphp/Caddyfile", "--watch" ]
 
+
 # Messenger worker image
-FROM frankenphp_dev AS frankenphp_workers
+FROM frankenphp_dev AS frankenphp_dev_workers
+ARG UID
+ARG GID
 # install supervisor and ffmpeg
 RUN apt-get update
 RUN apt-get install -y supervisor ffmpeg
 RUN rm -rf /var/cache/apt/archives /var/lib/apt/lists/*
-# # install yt-dlp
-RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux -o /usr/local/bin/yt-dlp
+# install yt-dlp in a user owned "my_bin" directory
+RUN mkdir /usr/local/my_bin
+RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux -o /usr/local/my_bin/yt-dlp
+# RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/download/2026.03.17/yt-dlp_linux -o /usr/local/my_bin/yt-dlp
+RUN chown -R ${UID}:${GID} /usr/local/my_bin
 # allow anyone to run yt-dlp
-RUN chmod a+x /usr/local/bin/yt-dlp
+RUN chmod a+x /usr/local/my_bin/yt-dlp
+# add "my_bin" to the PATH
+ENV PATH="/usr/local/my_bin:${PATH}"
 # add Deno JS runtime (yt-dlp requirement)
 COPY --link --from=denoland/deno:bin-2.5.6 /deno /usr/local/bin/deno
 # run supervisor in the foreground
 CMD ["supervisord", "-nc", "/etc/supervisor/conf.d/queue_worker.conf"]
+
 
 # Builder for the prod FrankenPHP image
 FROM frankenphp_base AS frankenphp_prod_builder
@@ -134,9 +147,12 @@ EOF
 
 
 # Prod FrankenPHP image
-FROM debian:13-slim AS frankenphp_prod
+FROM debian:13-slim AS frankenphp_prod_base
 
 SHELL ["/bin/bash", "-euxo", "pipefail", "-c"]
+
+ARG UID
+ARG GID
 
 ENV APP_ENV=prod
 ENV PHP_INI_SCAN_DIR=":/usr/local/etc/php/app.conf.d"
@@ -159,27 +175,53 @@ COPY --from=frankenphp_prod_builder /etc/ssl/openssl.cnf /etc/ssl/openssl.cnf
 COPY --from=frankenphp_prod_builder /usr/bin/file /usr/bin/file
 COPY --from=frankenphp_prod_builder /usr/lib/file/magic.mgc /usr/lib/file/magic.mgc
 
-ENV  OPENSSL_CONF=/etc/ssl/openssl.cnf XDG_CONFIG_HOME=/config XDG_DATA_HOME=/data SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+ENV OPENSSL_CONF=/etc/ssl/openssl.cnf XDG_CONFIG_HOME=/config XDG_DATA_HOME=/data SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 
 RUN <<-EOF
-	mkdir -p /data/caddy /config/caddy
-	chown -R www-data:www-data /data /config
+	# mkdir -p /data/caddy /config/caddy
+	# chown -R ${UID}:${GID} /data /config
 	# Remove setuid/setgid bits
 	find / -perm /6000 -type f -exec chmod a-s {} + 2>/dev/null || true
 EOF
 
 COPY --link --exclude=var --from=frankenphp_prod_builder /app /app
 # Group 0 + g=u for arbitrary-UID runtimes (e.g. OpenShift).
-COPY --chown=www-data:0 --from=frankenphp_prod_builder /app/var /app/var
+COPY --chown=${UID}:0 --from=frankenphp_prod_builder /app/var /app/var
 RUN chmod g=u /app/var
 
 COPY --link --chmod=755 frankenphp/docker-entrypoint.sh /usr/local/bin/docker-entrypoint
-
-USER www-data
 
 WORKDIR /app
 
 ENTRYPOINT ["docker-entrypoint"]
 
+
+FROM frankenphp_prod_base as frankenphp_prod
+
+USER ${UID}
+
 HEALTHCHECK --start-period=60s CMD php -r 'exit(false === @file_get_contents("http://localhost:2019/metrics", context: stream_context_create(["http" => ["timeout" => 5]])) ? 1 : 0);'
 CMD [ "frankenphp", "run", "--config", "/etc/frankenphp/Caddyfile" ]
+
+
+FROM frankenphp_prod_base as frankenphp_prod_workers
+ARG UID
+ARG GID
+# install supervisor and ffmpeg
+RUN apt-get update
+RUN apt-get install -y supervisor ffmpeg curl
+RUN rm -rf /var/cache/apt/archives /var/lib/apt/lists/*
+# install yt-dlp in a user owned "my_bin" directory
+RUN mkdir /usr/local/my_bin
+RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux -o /usr/local/my_bin/yt-dlp
+# RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/download/2026.03.17/yt-dlp_linux -o /usr/local/my_bin/yt-dlp
+RUN chown -R ${UID}:${GID} /usr/local/my_bin
+# allow anyone to run yt-dlp
+RUN chmod a+x /usr/local/my_bin/yt-dlp
+# add "my_bin" to the PATH
+ENV PATH="/usr/local/my_bin:${PATH}"
+# add Deno JS runtime (yt-dlp requirement)
+COPY --link --from=denoland/deno:bin-2.5.6 /deno /usr/local/bin/deno
+USER ${UID}
+# run supervisor in the foreground
+CMD ["supervisord", "-nc", "/etc/supervisor/conf.d/queue_worker.conf"]

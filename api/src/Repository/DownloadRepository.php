@@ -79,7 +79,6 @@ class DownloadRepository extends ServiceEntityRepository {
 
     public function getWaitingDownloadsQueuePositions(): array {
         $qb = $this->createQueryBuilder('d2');
-        $waitingState = DownloadState::Waiting->value;
         $subquery = $qb
             ->andWhere('d2.createdAt < d1.createdAt')
             ->andWhere($qb->expr()->in('d2.state', [
@@ -89,12 +88,13 @@ class DownloadRepository extends ServiceEntityRepository {
             ->select('COUNT(d2.id)')
             ->getDQL()
         ;
-        $query = $this->createQueryBuilder('d1')
+        $waitingState = DownloadState::Waiting->value;
+        return $this->createQueryBuilder('d1')
             ->select('d1 download')
             ->addSelect("({$subquery}) queuePosition")
             ->andWhere("d1.state = '{$waitingState}'")
             ->getQuery()
+            ->getArrayResult()
         ;
-        return $query->getArrayResult();
     }
 }

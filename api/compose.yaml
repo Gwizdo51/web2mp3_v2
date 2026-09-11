@@ -8,10 +8,14 @@ networks:
 
 services:
   web2mp3_v2_api:
-    container_name: "web2mp3_v2_api"
-    image: "web2mp3_v2/symfony"
+    env_file:
+    - path: ./.env
+      required: true
+    - path: ./.env.local
+      required: false
     environment:
       SERVER_NAME: ${SERVER_NAME:-localhost}, web2mp3_v2_api:80
+      CADDY_SERVER_NAME: ${CADDY_SERVER_NAME:?}
       # DEFAULT_URI: https://${SERVER_NAME:-localhost}:${HTTPS_PORT:-443}
       DEFAULT_URI: ${DEFAULT_URI:-localhost}
       MERCURE_PUBLISHER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
@@ -23,7 +27,9 @@ services:
       MERCURE_PUBLIC_URL: ${CADDY_MERCURE_PUBLIC_URL:-https://${SERVER_NAME:-localhost}:${HTTPS_PORT:-443}/.well-known/mercure}
       MERCURE_JWT_SECRET: ${CADDY_MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
       # MERCURE_EXTRA_DIRECTIVES: "cors_origins http://debian-server:4200 https://web2mp3-v2.100.124.238.99.nip.io"
-    user: "1000:1000"
+      # MERCURE_CORS: "cors_origins http://debian-server:4200 https://web2mp3-v2.100.124.238.99.nip.io"
+      # MERCURE_CORS: "cors_origins ${MERCURE_CORS_ORIGINS:?}"
+    user: "${UID:?}:${GID:?}"
     networks:
     - "net"
     volumes:
@@ -31,39 +37,25 @@ services:
     # - caddy_config:/config
     - "/srv/docker_data/web2mp3_v2/caddy_data:/data"
     - "/srv/docker_data/web2mp3_v2/caddy_config:/config"
-    ports:
-    - name: http
-      target: 80
-    #   published: ${HTTP_PORT:-80}
-      published: 15080
-      protocol: tcp
-    - name: https
-      target: 443
-    #   published: ${HTTPS_PORT:-443}
-      published: 15443
-      protocol: tcp
-    - name: http3
-      target: 443
-    #   published: ${HTTP3_PORT:-443}
-      published: 15443
-      protocol: udp
+    - "/srv/docker_data/web2mp3_v2/database:/app/database"
+    - "/srv/docker_data/web2mp3_v2/storage:/app/public/storage"
     # restart: unless-stopped
 
   web2mp3_v2_workers:
-    container_name: "web2mp3_v2_workers"
-    build:
-      context: "."
-      target: "frankenphp_workers"
-    image: "web2mp3_v2/workers"
-    user: "1000:1000"
+    env_file:
+    - path: "./.env"
+      required: true
+    - path: "./.env.local"
+      required: false
+    user: "${UID:?}:${GID:?}"
     networks:
     - "net"
     volumes:
-    - "./:/app"
-    - "./php.ini:/usr/local/etc/php/php.ini"
+    # - "./php.ini:/usr/local/etc/php/php.ini"
     - "./queue_worker.conf:/etc/supervisor/conf.d/queue_worker.conf:ro"
     - "/srv/docker_data/web2mp3_v2/database:/app/database"
     - "/srv/docker_data/web2mp3_v2/storage:/app/public/storage"
+    # restart: unless-stopped
 
 # Mercure is installed as a Caddy module, prevent the Flex recipe from installing another service
 ###> symfony/mercure-bundle ###

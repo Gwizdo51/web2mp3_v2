@@ -14,12 +14,10 @@ import { Download } from '../../../models/download';
     styleUrl: './form.css',
 })
 export class Form {
-    // public readonly requestModel = model.required<RequestFormModel>();
     public readonly download = model.required<Download|null>();
     protected readonly requestModel = signal(new RequestFormModel());
     protected readonly formats: DownloadFormat[] = ['mp3', 'm4a', 'flac', 'wav', 'aac', 'alac', 'opus', 'vorbis'];
     protected readonly qualities: DownloadQuality[] = ['best', 'good', 'average', 'poor'];
-    // public readonly requestAccepted = output<RequestReply>();
     protected readonly downloadService = inject(DownloadService);
     protected readonly modelForm = form(
         this.requestModel,
@@ -34,25 +32,18 @@ export class Form {
         {
             submission: {
                 action: async (field) => {
-                    // console.log('valid form submitted', field(), field().value(), detail);
                     try {
                         const response = await firstValueFrom(this.downloadService.postDownloadRequest(field().value()));
                         console.log('API response:', response);
-                        // this.requestAccepted.emit(response);
                         globalThis.localStorage.setItem('format', field().value().format);
                         globalThis.localStorage.setItem('quality', field().value().quality);
                         this.download.set(response);
                         return;
                     }
                     catch (err: any) {
-                        // console.log('error caught');
-                        // console.log(err);
                         if (err instanceof HttpErrorResponse && err.status === 422) {
-                            // console.log('validation error');
-                            // console.log(err.error.violations);
                             const linkViolations: any[] = [];
                             err.error.violations.forEach((violation: any) => {
-                                // console.log(violation);
                                 if (violation.propertyPath === 'link') {
                                     linkViolations.push({
                                         kind: 'validationError',
@@ -73,7 +64,6 @@ export class Form {
                     }
                 },
                 onInvalid: () => {
-                    // console.log('invalid form submitted', field(), field().value(), detail);
                     this.modelForm.link().markAsDirty();
                 },
             },

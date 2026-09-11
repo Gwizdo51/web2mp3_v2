@@ -14,6 +14,7 @@
         "doctrine/doctrine-bundle": "^3.3",
         "doctrine/doctrine-migrations-bundle": "^4.0",
         "doctrine/orm": "^3.6",
+        "dragonmantank/cron-expression": "^3.6",
         "nelmio/cors-bundle": "^2.6",
         "phpdocumentor/reflection-docblock": "^6.0",
         "phpstan/phpdoc-parser": "^2.3",
@@ -27,10 +28,12 @@
         "symfony/framework-bundle": "8.1.*",
         "symfony/mercure-bundle": "^0.5.0",
         "symfony/messenger": "8.1.*",
+        "symfony/monolog-bundle": "^4.0",
         "symfony/process": "8.1.*",
         "symfony/property-access": "8.1.*",
         "symfony/property-info": "8.1.*",
         "symfony/runtime": "8.1.*",
+        "symfony/scheduler": "8.1.*",
         "symfony/security-bundle": "8.1.*",
         "symfony/serializer": "8.1.*",
         "symfony/twig-bundle": "8.1.*",
@@ -89,12 +92,14 @@
             "allow-contrib": false,
             "require": "8.1.*",
             "docker": true
+        },
+        "runtime": {
+            "dotenv_overload": true
         }
     },
     "require-dev": {
         "symfony/debug-bundle": "8.1.*",
         "symfony/maker-bundle": "^1.67",
-        "symfony/monolog-bundle": "^3.0|^4.0",
         "symfony/stopwatch": "8.1.*",
         "symfony/web-profiler-bundle": "8.1.*"
     }

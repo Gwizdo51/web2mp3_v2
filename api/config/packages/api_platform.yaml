@@ -25,3 +25,7 @@ api_platform:
             docExpansion: none
             persistAuthorization: true
             filter: true
+
+when@prod:
+    api_platform:
+        enable_swagger_ui: false

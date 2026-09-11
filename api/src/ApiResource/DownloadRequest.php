@@ -30,7 +30,6 @@ class DownloadRequest {
     public function __construct(
         #[Groups([
             'download_request:post',
-            // 'download_request:get',
         ])]
         #[Assert\NotBlank(message: 'The link is required')]
         #[Assert\Url(message: 'The link must be a valid URL')]
@@ -38,14 +37,12 @@ class DownloadRequest {
 
         #[Groups([
             'download_request:post',
-            // 'download_request:get',
         ])]
         #[Assert\NotNull()]
         public ?DownloadFormat $format = null,
 
         #[Groups([
             'download_request:post',
-            // 'download_request:get',
         ])]
         #[Assert\NotNull()]
         public ?DownloadQuality $quality = null,

@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { RequestFormModel } from '../models/request-form-model';
 import { map, Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
@@ -9,9 +9,7 @@ import { Download } from '../models/download';
     providedIn: 'root',
 })
 export class DownloadService {
-    public constructor(
-        protected readonly http: HttpClient,
-    ) {}
+    protected readonly http = inject(HttpClient);
 
     public postDownloadRequest(requestFormModel: RequestFormModel): Observable<Download> {
         return this.http.post<Partial<Download>>(

@@ -31,7 +31,7 @@ export class Processing implements OnInit, OnDestroy {
         this.eventSource = this.downloadService.getHubEventSource(<string>this.download()?.id);
         this.eventSource.onmessage = (event) => {
             const data = JSON.parse(event.data);
-            console.log('message received', data);
+            console.log('message received:', data);
             this.download.update((download) => download ? {...download, ...data} : null);
         };
     }

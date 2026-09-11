@@ -8,16 +8,17 @@ use App\Enum\DownloadState;
 use App\Repository\DownloadRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Bridge\Doctrine\Types\UuidType;
-use Symfony\Component\Uid\Uuid;
+// use Symfony\Bridge\Doctrine\Types\UuidType;
+// use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: DownloadRepository::class)]
 class Download
 {
     #[ORM\Id]
     // #[ORM\GeneratedValue]
-    #[ORM\Column(type: UuidType::NAME)]
-    private ?Uuid $id = null;
+    // #[ORM\Column(type: UuidType::NAME)]
+    #[ORM\Column(length: 255)]
+    private ?string $id = null;
 
     #[ORM\Column(length: 255)]
     private ?string $link = null;
@@ -40,12 +41,12 @@ class Download
     #[ORM\Column(type: 'datetime_milliseconds')]
     private ?\DateTimeImmutable $createdAt = null;
 
-    public function getId(): ?Uuid
+    public function getId(): ?string
     {
         return $this->id;
     }
 
-    public function setId(Uuid $id): static
+    public function setId(string $id): static
     {
         $this->id = $id;
 

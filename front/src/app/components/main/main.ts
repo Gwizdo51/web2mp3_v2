@@ -1,4 +1,4 @@
-import { Component, effect, signal, viewChild } from '@angular/core';
+import { Component, effect, inject, signal, viewChild } from '@angular/core';
 import { Form } from '../pages/form/form';
 import { PageTitle } from '../../enum/page-title';
 import { Processing } from '../pages/processing/processing';
@@ -24,10 +24,9 @@ export default class Main {
     //     error: 'error description',
     // });
     protected readonly formComponent = viewChild(Form);
+    protected readonly titleService = inject(Title);
 
-    public constructor(
-        protected readonly titleService: Title,
-    ) {
+    public constructor() {
         effect(() => {
             const download = this.download();
             if (download == null) {
