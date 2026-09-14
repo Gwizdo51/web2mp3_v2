@@ -46,7 +46,7 @@ class DownloadService {
     }
 
     public function processDownloadRequest(DownloadRequest $downloadRequest): DownloadRequest {
-        $this->logger->info('DownloadService->processDownloadRequest - New download request received', ['$downloadRequest' => $downloadRequest]);
+        $this->logger->info('{method} - New download request received', ['method' => __METHOD__, '$downloadRequest' => $downloadRequest]);
         // check if another download has the same parameters
         $sameDownload = $this->downloadRepository->findSameDownload($downloadRequest);
         if ($sameDownload !== null) {
@@ -58,7 +58,7 @@ class DownloadService {
             $queuePosition = $this->downloadRepository->getQueuePosition($sameDownload->getCreatedAt());
             // dump('queue position :', $queuePosition);
             $downloadRequest->queuePosition = $queuePosition;
-            $this->logger->info('DownloadService->processDownloadRequest - Same download found', ['$sameDownload' => $downloadRequest]);
+            $this->logger->info('{method} - Same download found', ['method' => __METHOD__, '$sameDownload' => $downloadRequest]);
         }
         else {
             $now = new DateTimeImmutable();
@@ -79,14 +79,14 @@ class DownloadService {
             $queuePosition = $this->downloadRepository->getQueuePosition($now);
             $downloadRequest->queuePosition = $queuePosition;
             // dispatch the message to download the link
-            $this->logger->info('DownloadService->processDownloadRequest - Same download not found, dispatching message', ['$downloadRequest' => $downloadRequest]);
+            $this->logger->info('{method} - Same download not found, dispatching message', ['method' => __METHOD__, '$downloadRequest' => $downloadRequest]);
             $this->bus->dispatch(new ConvertVideoToAudioMessage($downloadRequest));
         }
         return $downloadRequest;
     }
 
     public function convertVideoToAudio(DownloadRequest $downloadRequest): void {
-        $this->logger->info('DownloadService->handleConvertVideoToAudio - Called', ['$downloadRequest' => $downloadRequest]);
+        $this->logger->info('{method} - Called', ['method' => __METHOD__, '$downloadRequest' => $downloadRequest]);
         // retrieve the download from the database
         /** @var Download */
         $download = $this->downloadRepository->find($downloadRequest->id);
@@ -102,17 +102,14 @@ class DownloadService {
         $this->filesystem->mkdir("/app/public/storage/{$downloadRequest->id}");
         $downloadProcessCommand = ['yt-dlp', '-x', '-f', 'bestaudio', '--audio-format', $downloadRequest->format->value, '--audio-quality', $this->downloadQualityToInt[$downloadRequest->quality->value],
             '-o', "/app/public/storage/{$downloadRequest->id}/%(title)s.%(ext)s", '--no-playlist', '--no-cache-dir', $downloadRequest->link];
-        $this->logger->info('DownloadService->handleConvertVideoToAudio - Starting new download process - Command:');
-        $this->logger->info(implode(' ', $downloadProcessCommand));
+        $this->logger->info('{method} - Starting new download process - Command: "{command}"', ['method' => __METHOD__, 'command' => implode(' ', $downloadProcessCommand)]);
         $downloadProcess = new Process($downloadProcessCommand);
         $downloadProcess->setTimeout(300);
         $downloadProcess->run();
         if ($downloadProcess->isSuccessful()) {
-            $this->logger->info('DownloadService->handleConvertVideoToAudio - Download process successful');
-            $this->logger->info('DownloadService->handleConvertVideoToAudio - Output:');
-            $this->logger->info(trim($downloadProcess->getOutput()));
-            $this->logger->info('DownloadService->handleConvertVideoToAudio - Error Output:');
-            $this->logger->info(trim($downloadProcess->getErrorOutput()));
+            $this->logger->info('{method} - Download process successful', ['method' => __METHOD__]);
+            $this->logger->info("{method} - Output:\n{output}", ['method' => __METHOD__, 'output' => trim($downloadProcess->getOutput())]);
+            $this->logger->info("{method} - Error output:\n{errorOutput}", ['method' => __METHOD__, 'errorOutput' => trim($downloadProcess->getErrorOutput())]);
             $downloadRequest->state = DownloadState::Succeeded;
             $download->setState(DownloadState::Succeeded);
             // retrieve the name of the generated file
@@ -122,19 +119,17 @@ class DownloadService {
             $downloadRequest->fileName = $filename;
             $download->setFileName($filename);
             // queue the file deletion job
-            $this->logger->info('DownloadService->handleConvertVideoToAudio - Dispatching file deletion message');
+            $this->logger->info('{method} - Dispatching file deletion message', ['method' => __METHOD__]);
             $this->bus->dispatch(new DeleteFileMessage($downloadRequest->id), [
                 // new DelayStamp(60 * 1000),
                 new DelayStamp(60 * 60 * 1000),
             ]);
         }
         else {
-            $this->logger->info('DownloadService->handleConvertVideoToAudio - Download process failed');
-            $this->logger->info('DownloadService->handleConvertVideoToAudio - Output:');
-            $this->logger->info(trim($downloadProcess->getOutput()));
-            $this->logger->info('DownloadService->handleConvertVideoToAudio - Error output:');
+            $this->logger->error('{method} - Download process failed', ['method' => __METHOD__]);
+            $this->logger->info("{method} - Output:\n{output}", ['method' => __METHOD__, 'output' => trim($downloadProcess->getOutput())]);
             $errorOutput = trim($downloadProcess->getErrorOutput());
-            $this->logger->info($errorOutput);
+            $this->logger->info("{method} - Error output:\n{errorOutput}", ['method' => __METHOD__, 'errorOutput' => $errorOutput]);
             // delete the folder that was created for the download
             $this->filesystem->remove("/app/public/storage/{$downloadRequest->id}");
             // update the download state
@@ -154,7 +149,7 @@ class DownloadService {
     }
 
     protected function broadcastUpdate(DownloadRequest $downloadRequest) {
-        $this->logger->info('DownloadService->broadcastUpdate - Broadcasting update', ['$downloadRequest' => $downloadRequest]);
+        $this->logger->info('{method} - Broadcasting update', ['method' => __METHOD__, '$downloadRequest' => $downloadRequest]);
         $jsonContent = $this->serializer->serialize($downloadRequest, 'json', ['groups' => ['download_request:get']]);
         dump('broadcasting update', $jsonContent);
         $this->hub->publish(new Update(
@@ -164,7 +159,7 @@ class DownloadService {
     }
 
     public function deleteFile(string $id): void {
-        $this->logger->info("DownloadService->broadcastUpdate - Deleting folder \"{$id}\"");
+        $this->logger->info('{method} - Deleting folder {id}', ['method' => __METHOD__, 'id' => $id]);
         $this->filesystem->remove("/app/public/storage/{$id}");
         // update the state of the download in the database
         /** @var Download */
@@ -176,7 +171,7 @@ class DownloadService {
     public function broadcastQueueUpdate(): void {
         // retrieve all the downloads in waiting state, along with their queue positions
         $queuePositionsArray = $this->downloadRepository->getWaitingDownloadsQueuePositions();
-        $this->logger->info('DownloadService->handleBroadcastQueueUpdate - Broadcasting queue position updates', $queuePositionsArray);
+        $this->logger->info('{method} - Broadcasting queue position updates', ['method' => __METHOD__, 'queuePositionsArray' => $queuePositionsArray]);
         foreach ($queuePositionsArray as $queuePositionArray) {
             // create a DownloadRequest object and broadcast it via Mercure
             $downloadRequest = new DownloadRequest(
@@ -185,6 +180,23 @@ class DownloadService {
                 queuePosition: $queuePositionArray['queuePosition'],
             );
             $this->broadcastUpdate($downloadRequest);
+        }
+    }
+
+    public function updateYtdlpBinary(): void {
+        $this->logger->info('{method} - Updating yt-dlp', ['method' => __METHOD__]);
+        $updateProcess = new Process(['yt-dlp', '-U']);
+        $updateProcess->setTimeout(300);
+        $updateProcess->run();
+        if ($updateProcess->isSuccessful()) {
+            $this->logger->info('{method} - Successfully updated yt-dlp', ['method' => __METHOD__]);
+            $this->logger->info("{method} - Output:\n{output}", ['method' => __METHOD__, 'output' => trim($updateProcess->getOutput())]);
+            $this->logger->info("{method} - Error output:\n{errorOutput}", ['method' => __METHOD__, 'errorOutput' => trim($updateProcess->getErrorOutput())]);
+        }
+        else {
+            $this->logger->error('{method} - Error while updating yt-dlp', ['method' => __METHOD__]);
+            $this->logger->info("{method} - Output:\n{output}", ['method' => __METHOD__, 'output' => trim($updateProcess->getOutput())]);
+            $this->logger->info("{method} - Error output:\n{errorOutput}", ['method' => __METHOD__, 'errorOutput' => trim($updateProcess->getErrorOutput())]);
         }
     }
 }

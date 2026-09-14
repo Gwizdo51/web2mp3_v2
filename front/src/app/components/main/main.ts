@@ -21,7 +21,15 @@ export default class Main {
     //     id: '01a08890-b274-7b87-a894-0a500f5bb1f2',
     //     state: 'failed',
     //     fileName: 'Yee.mp3',
-    //     error: 'error description',
+    //     error: 'Lorem ipsum dolor, sit amet consectetur adipisicing elit. Consequuntur dolores itaque dolore illum a magni assumenda, '
+    //         + 'voluptas adipisci enim alias est rerum molestiae nisi sint tempora hic unde inventore? Placeat.\nLorem, ipsum dolor sit amet consectetur '
+    //         + 'adipisicing elit. Placeat dolore, ut deserunt sequi magni recusandae! Libero, alias voluptatem? Ex autem, voluptas pariatur tenetur '
+    //         + 'excepturi laudantium reiciendis ad repellendus laborum ipsum.\nLorem ipsum dolor, sit amet consectetur adipisicing elit. Consequuntur '
+    //         + 'dolores itaque dolore illum a magni assumenda, voluptas adipisci enim alias est rerum molestiae nisi sint tempora hic unde inventore? Placeat.\n'
+    //         + 'Lorem, ipsum dolor sit amet consectetur adipisicing elit. Placeat dolore, ut deserunt sequi magni recusandae! Libero, alias voluptatem? Ex autem, '
+    //         + 'voluptas pariatur tenetur excepturi laudantium reiciendis ad repellendus laborum ipsum. '
+    //         + 'LoremipsumdolorsitametconsecteturadipisicingelitPlaceatdoloreutdeseruntsequimagnirecusandaeLiberoaliasvoluptatemExautemLoremipsumdolorsitametconsecteturadipisicingelitPlaceatdoloreutdeseruntsequimagnirecusandaeLiberoaliasvoluptatemExautem',
+    //     queuePosition: 0,
     // });
     protected readonly formComponent = viewChild(Form);
     protected readonly titleService = inject(Title);

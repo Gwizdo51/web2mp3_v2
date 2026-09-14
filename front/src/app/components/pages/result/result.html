@@ -16,8 +16,8 @@
                 <button hlmPopoverTrigger class="py-2 px-5 border-2 border-zinc-700 hover:bg-zinc-700 active:bg-zinc-700 rounded-md cursor-pointer transition-all ease-out duration-100">
                     Show error
                 </button>
-                <hlm-popover-content class="md:w-175 max-h-50 flex border-2 border-red-800 bg-zinc-950 p-1 mt-2" *hlmPopoverPortal="let ctx">
-                    <span class="whitespace-pre-wrap">{{ download()?.error }}</span>
+                <hlm-popover-content class="w-[calc(100%-var(--spacing)*10)] mx-auto md:w-175 max-h-50 flex border-2 border-red-800 bg-zinc-950 p-1 mt-2" *hlmPopoverPortal="let ctx">
+                    <span class="whitespace-pre-wrap overflow-auto">{{ download()?.error }}</span>
                 </hlm-popover-content>
             </hlm-popover>
         }
