@@ -29,6 +29,7 @@ export default class Main {
     public constructor() {
         effect(() => {
             const download = this.download();
+            // console.log('update to "download" detected:', JSON.stringify(download));
             if (download == null) {
                 this.currentPage.set(PageTitle.Landing);
             }

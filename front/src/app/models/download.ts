@@ -1,3 +1,5 @@
+import { DownloadState } from "../types";
+
 export class Download {
     public id: string|null = null;
     public state: DownloadState|null = null;

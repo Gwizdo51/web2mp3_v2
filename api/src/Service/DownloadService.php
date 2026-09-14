@@ -85,7 +85,7 @@ class DownloadService {
         return $downloadRequest;
     }
 
-    public function handleConvertVideoToAudio(DownloadRequest $downloadRequest): void {
+    public function convertVideoToAudio(DownloadRequest $downloadRequest): void {
         $this->logger->info('DownloadService->handleConvertVideoToAudio - Called', ['$downloadRequest' => $downloadRequest]);
         // retrieve the download from the database
         /** @var Download */
@@ -108,8 +108,11 @@ class DownloadService {
         $downloadProcess->setTimeout(300);
         $downloadProcess->run();
         if ($downloadProcess->isSuccessful()) {
-            $this->logger->info('DownloadService->handleConvertVideoToAudio - Download process successful - Output:');
+            $this->logger->info('DownloadService->handleConvertVideoToAudio - Download process successful');
+            $this->logger->info('DownloadService->handleConvertVideoToAudio - Output:');
             $this->logger->info(trim($downloadProcess->getOutput()));
+            $this->logger->info('DownloadService->handleConvertVideoToAudio - Error Output:');
+            $this->logger->info(trim($downloadProcess->getErrorOutput()));
             $downloadRequest->state = DownloadState::Succeeded;
             $download->setState(DownloadState::Succeeded);
             // retrieve the name of the generated file
@@ -126,18 +129,19 @@ class DownloadService {
             ]);
         }
         else {
-            $this->logger->info('DownloadService->handleConvertVideoToAudio - Download process successful');
+            $this->logger->info('DownloadService->handleConvertVideoToAudio - Download process failed');
             $this->logger->info('DownloadService->handleConvertVideoToAudio - Output:');
             $this->logger->info(trim($downloadProcess->getOutput()));
             $this->logger->info('DownloadService->handleConvertVideoToAudio - Error output:');
-            $this->logger->info(trim($downloadProcess->getErrorOutput()));
+            $errorOutput = trim($downloadProcess->getErrorOutput());
+            $this->logger->info($errorOutput);
             // delete the folder that was created for the download
             $this->filesystem->remove("/app/public/storage/{$downloadRequest->id}");
             // update the download state
             $downloadRequest->state = DownloadState::Failed;
-            $downloadRequest->error = $downloadProcess->getErrorOutput();
+            $downloadRequest->error = $errorOutput;
             $download->setState(DownloadState::Failed);
-            $download->setError($downloadProcess->getErrorOutput());
+            $download->setError($errorOutput);
         }
         // sleep(10);
         // $this->filesystem->dumpFile("/app/public/storage/{$downloadRequest->id}/test.txt", "test\n");
@@ -159,7 +163,7 @@ class DownloadService {
         ));
     }
 
-    public function handleDeleteFile(string $id): void {
+    public function deleteFile(string $id): void {
         $this->logger->info("DownloadService->broadcastUpdate - Deleting folder \"{$id}\"");
         $this->filesystem->remove("/app/public/storage/{$id}");
         // update the state of the download in the database
@@ -169,7 +173,7 @@ class DownloadService {
         $this->em->flush();
     }
 
-    public function handleBroadcastQueueUpdate(): void {
+    public function broadcastQueueUpdate(): void {
         // retrieve all the downloads in waiting state, along with their queue positions
         $queuePositionsArray = $this->downloadRepository->getWaitingDownloadsQueuePositions();
         $this->logger->info('DownloadService->handleBroadcastQueueUpdate - Broadcasting queue position updates', $queuePositionsArray);

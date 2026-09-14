@@ -13,6 +13,6 @@ final class DeleteFileMessageHandler {
     ) {}
 
     public function __invoke(DeleteFileMessage $message): void {
-        $this->downloadService->handleDeleteFile($message->id);
+        $this->downloadService->deleteFile($message->id);
     }
 }

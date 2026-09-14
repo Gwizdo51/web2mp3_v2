@@ -81,6 +81,7 @@ CMD [ "frankenphp", "run", "--config", "/etc/frankenphp/Caddyfile", "--watch" ]
 FROM frankenphp_dev AS frankenphp_dev_workers
 ARG UID
 ARG GID
+HEALTHCHECK NONE
 # install supervisor and ffmpeg
 RUN apt-get update
 RUN apt-get install -y supervisor ffmpeg
@@ -149,10 +150,10 @@ EOF
 # Prod FrankenPHP image
 FROM debian:13-slim AS frankenphp_prod_base
 
-SHELL ["/bin/bash", "-euxo", "pipefail", "-c"]
-
 ARG UID
 ARG GID
+
+SHELL ["/bin/bash", "-euxo", "pipefail", "-c"]
 
 ENV APP_ENV=prod
 ENV PHP_INI_SCAN_DIR=":/usr/local/etc/php/app.conf.d"
@@ -197,9 +198,8 @@ ENTRYPOINT ["docker-entrypoint"]
 
 
 FROM frankenphp_prod_base as frankenphp_prod
-
+ARG UID
 USER ${UID}
-
 HEALTHCHECK --start-period=60s CMD php -r 'exit(false === @file_get_contents("http://localhost:2019/metrics", context: stream_context_create(["http" => ["timeout" => 5]])) ? 1 : 0);'
 CMD [ "frankenphp", "run", "--config", "/etc/frankenphp/Caddyfile" ]
 

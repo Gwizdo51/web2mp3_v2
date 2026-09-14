@@ -13,6 +13,6 @@ final class ConvertVideoToAudioMessageHandler {
     ) {}
 
     public function __invoke(ConvertVideoToAudioMessage $message): void {
-        $this->downloadService->handleConvertVideoToAudio($message->downloadRequest);
+        $this->downloadService->convertVideoToAudio($message->downloadRequest);
     }
 }

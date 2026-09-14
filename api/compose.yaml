@@ -1,5 +1,5 @@
 ---
-name: "web2mp3_v2_api"
+name: "web2mp3_api"
 
 networks:
   net:
@@ -7,14 +7,14 @@ networks:
     external: true
 
 services:
-  web2mp3_v2_api:
+  web2mp3_api:
     env_file:
     - path: ./.env
       required: true
     - path: ./.env.local
       required: false
     environment:
-      SERVER_NAME: ${SERVER_NAME:-localhost}, web2mp3_v2_api:80
+      SERVER_NAME: ${SERVER_NAME:-localhost}, web2mp3_api:80
       CADDY_SERVER_NAME: ${CADDY_SERVER_NAME:?}
       # DEFAULT_URI: https://${SERVER_NAME:-localhost}:${HTTPS_PORT:-443}
       DEFAULT_URI: ${DEFAULT_URI:-localhost}
@@ -23,11 +23,11 @@ services:
       # Run "composer require symfony/orm-pack" to install and configure Doctrine ORM
       # DATABASE_URL: postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-!ChangeMe!}@database:5432/${POSTGRES_DB:-app}?serverVersion=${POSTGRES_VERSION:-15}&charset=${POSTGRES_CHARSET:-utf8}
       # Run "composer require symfony/mercure-bundle" to install and configure the Mercure integration
-      MERCURE_URL: ${CADDY_MERCURE_URL:-http://web2mp3_v2_api/.well-known/mercure}
+      MERCURE_URL: ${CADDY_MERCURE_URL:-http://web2mp3_api/.well-known/mercure}
       MERCURE_PUBLIC_URL: ${CADDY_MERCURE_PUBLIC_URL:-https://${SERVER_NAME:-localhost}:${HTTPS_PORT:-443}/.well-known/mercure}
       MERCURE_JWT_SECRET: ${CADDY_MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}
-      # MERCURE_EXTRA_DIRECTIVES: "cors_origins http://debian-server:4200 https://web2mp3-v2.100.124.238.99.nip.io"
-      # MERCURE_CORS: "cors_origins http://debian-server:4200 https://web2mp3-v2.100.124.238.99.nip.io"
+      # MERCURE_EXTRA_DIRECTIVES: "cors_origins http://debian-server:4200 https://web2mp3.100.124.238.99.nip.io"
+      # MERCURE_CORS: "cors_origins http://debian-server:4200 https://web2mp3.100.124.238.99.nip.io"
       # MERCURE_CORS: "cors_origins ${MERCURE_CORS_ORIGINS:?}"
     user: "${UID:?}:${GID:?}"
     networks:
@@ -39,9 +39,8 @@ services:
     - "/srv/docker_data/web2mp3_v2/caddy_config:/config"
     - "/srv/docker_data/web2mp3_v2/database:/app/database"
     - "/srv/docker_data/web2mp3_v2/storage:/app/public/storage"
-    # restart: unless-stopped
 
-  web2mp3_v2_workers:
+  web2mp3_workers:
     env_file:
     - path: "./.env"
       required: true
@@ -55,7 +54,6 @@ services:
     - "./queue_worker.conf:/etc/supervisor/conf.d/queue_worker.conf:ro"
     - "/srv/docker_data/web2mp3_v2/database:/app/database"
     - "/srv/docker_data/web2mp3_v2/storage:/app/public/storage"
-    # restart: unless-stopped
 
 # Mercure is installed as a Caddy module, prevent the Flex recipe from installing another service
 ###> symfony/mercure-bundle ###

@@ -1,8 +1,8 @@
 ---
 # Development environment override
 services:
-  web2mp3_v2_api:
-    container_name: "web2mp3_v2_api_dev"
+  web2mp3_api:
+    container_name: "web2mp3_api_dev"
     env_file:
     - path: ./.env.dev
       required: false
@@ -11,7 +11,7 @@ services:
     build:
       context: .
       target: frankenphp_dev
-    image: "web2mp3_v2/symfony-dev"
+    image: "web2mp3/symfony-dev"
     volumes:
     - ./:/app
     - ./frankenphp/Caddyfile:/etc/frankenphp/Caddyfile:ro
@@ -52,8 +52,8 @@ services:
     #   published: 15443
     #   protocol: udp
 
-  web2mp3_v2_workers:
-    container_name: "web2mp3_v2_workers_dev"
+  web2mp3_workers:
+    container_name: "web2mp3_workers_dev"
     env_file:
     - path: "./.env.dev"
       required: false
@@ -65,7 +65,7 @@ services:
       args:
         UID: "${UID:?}"
         GID: "${GID:?}"
-    image: "web2mp3_v2/workers-dev"
+    image: "web2mp3/workers-dev"
     volumes:
     - "./:/app"
     - "./frankenphp/Caddyfile:/etc/frankenphp/Caddyfile:ro"

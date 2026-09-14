@@ -13,6 +13,6 @@ final class BroadcastQueueUpdateMessageHandler {
     ) {}
 
     public function __invoke(BroadcastQueueUpdateMessage $message): void {
-        $this->downloadService->handleBroadcastQueueUpdate();
+        $this->downloadService->broadcastQueueUpdate();
     }
 }

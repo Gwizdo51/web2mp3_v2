@@ -6,6 +6,7 @@ import { DownloadService } from '../../../services/download-service';
 import { firstValueFrom } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Download } from '../../../models/download';
+import { getAllDownloadFormats, getAllDownloadQualities } from '../../../types';
 
 @Component({
     selector: 'app-form',
@@ -16,8 +17,8 @@ import { Download } from '../../../models/download';
 export class Form {
     public readonly download = model.required<Download|null>();
     protected readonly requestModel = signal(new RequestFormModel());
-    protected readonly formats: DownloadFormat[] = ['mp3', 'm4a', 'flac', 'wav', 'aac', 'alac', 'opus', 'vorbis'];
-    protected readonly qualities: DownloadQuality[] = ['best', 'good', 'average', 'poor'];
+    protected readonly formats = getAllDownloadFormats();
+    protected readonly qualities = getAllDownloadQualities();
     protected readonly downloadService = inject(DownloadService);
     protected readonly modelForm = form(
         this.requestModel,
@@ -33,6 +34,7 @@ export class Form {
             submission: {
                 action: async (field) => {
                     try {
+                        // send the request to the API and await its response
                         const response = await firstValueFrom(this.downloadService.postDownloadRequest(field().value()));
                         console.log('API response:', response);
                         globalThis.localStorage.setItem('format', field().value().format);

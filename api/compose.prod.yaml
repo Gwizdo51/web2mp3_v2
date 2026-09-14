@@ -1,8 +1,8 @@
 ---
 # Production environment override
 services:
-  web2mp3_v2_api:
-    container_name: "web2mp3_v2_api_prod"
+  web2mp3_api:
+    container_name: "web2mp3_api_prod"
     env_file:
     - path: ./.env.prod
       required: false
@@ -14,7 +14,7 @@ services:
       args:
         UID: "${UID:?}"
         GID: "${GID:?}"
-    image: "web2mp3_v2/symfony-prod"
+    image: "web2mp3/symfony-prod"
     environment:
       APP_SECRET: ${APP_SECRET}
       MERCURE_PUBLISHER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET}
@@ -22,9 +22,10 @@ services:
     # volumes:
     # - "/srv/docker_data/web2mp3_v2/database:/app/database"
     # - "/srv/docker_data/web2mp3_v2/storage:/app/public/storage"
+    restart: unless-stopped
 
-  web2mp3_v2_workers:
-    container_name: "web2mp3_v2_workers_prod"
+  web2mp3_workers:
+    container_name: "web2mp3_workers_prod"
     env_file:
     - path: "./.env.prod"
       required: false
@@ -36,4 +37,5 @@ services:
       args:
         UID: "${UID:?}"
         GID: "${GID:?}"
-    image: "web2mp3_v2/workers-prod"
+    image: "web2mp3/workers-prod"
+    restart: unless-stopped

@@ -1,20 +1,20 @@
 # dev : https://docs.docker.com/guides/angular/develop/
 # prod : https://docs.docker.com/guides/angular/containerize/
-name: "web2mp3_v2_angular"
+name: "web2mp3_angular"
 
 # create beforehand
 networks:
   net:
-    name: "web2mp3_v2_angular"
+    name: "web2mp3_angular"
     # external: true
 
 services:
   node:
-    container_name: "web2mp3_v2_angular"
+    container_name: "web2mp3_angular"
     build:
       context: "./"
       target: "angular_image"
-    image: "web2mp3_v2/angular"
+    image: "web2mp3/angular"
     networks:
     - "net"
     working_dir: "/app"

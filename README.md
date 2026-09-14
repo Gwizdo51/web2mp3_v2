@@ -4,8 +4,12 @@ The same web project (download songs from YouTube), but with Angular and Symfony
 ## Build & serve front-end
 
 From the `front` folder:
-- `ng build`
-- `rm -rf /srv/static/web2mp3_v2_front/browser/ && cp -r ./dist/front/browser/ /srv/static/web2mp3_v2_front/`
+- `docker compose exec node ng build`
+- `rm -rf /srv/static/web2mp3_front/browser/ && cp -r ./dist/front/browser/ /srv/static/web2mp3_front/`
+
+Fom the `api` folder:
+- `docker compose -f compose.yaml -f compose.prod.yaml build`
+- `docker compose -f compose.yaml -f compose.prod.yaml up -d`
 
 ## TODO
 

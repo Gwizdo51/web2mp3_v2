@@ -17,7 +17,7 @@
                     Show error
                 </button>
                 <hlm-popover-content class="md:w-175 max-h-50 flex border-2 border-red-800 bg-zinc-950 p-1 mt-2" *hlmPopoverPortal="let ctx">
-                    {{ download()?.error }}
+                    <span class="whitespace-pre-wrap">{{ download()?.error }}</span>
                 </hlm-popover-content>
             </hlm-popover>
         }
