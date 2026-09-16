@@ -11,10 +11,13 @@ Fom the `api` folder:
 - `docker compose -f compose.yaml -f compose.prod.yaml build`
 - `docker compose -f compose.yaml -f compose.prod.yaml up -d`
 
-## TODO
+### Logrotate
 
-- [x] Add new "deleted" state for downloads which files have been deleted
-- [x] Redirect to same download if same link + format + quality + not deleted yet
-- [x] Add queue position broadcasting
-- [x] Add scheduler to update yt-dlp
-- [x] Set up logging
+```
+/home/arthur/code/projects/web2mp3_v2/api/var/log/{dev,prod}.log {
+    rotate 8
+    weekly
+    size 100k
+    missingok
+}
+```

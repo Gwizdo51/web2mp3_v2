@@ -5,17 +5,15 @@ namespace App\Entity;
 use App\Enum\DownloadFormat;
 use App\Enum\DownloadQuality;
 use App\Enum\DownloadState;
-use App\Repository\DownloadRepository;
+use App\Repository\DownloadViewRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-// use Symfony\Bridge\Doctrine\Types\UuidType;
-// use Symfony\Component\Uid\Uuid;
 
-#[ORM\Entity(repositoryClass: DownloadRepository::class)]
-class Download {
+#[ORM\Entity(repositoryClass: DownloadViewRepository::class)]
+#[ORM\Table('download_view')]
+class DownloadView {
     #[ORM\Id]
     // #[ORM\GeneratedValue]
-    // #[ORM\Column(type: UuidType::NAME)]
     #[ORM\Column(length: 255)]
     private ?string $id = null;
 
@@ -40,16 +38,12 @@ class Download {
     #[ORM\Column(type: 'datetime_milliseconds')]
     private ?\DateTimeImmutable $createdAt = null;
 
+    #[ORM\Column]
+    private ?int $queuePosition = null;
+
     public function getId(): ?string
     {
         return $this->id;
-    }
-
-    public function setId(string $id): static
-    {
-        $this->id = $id;
-
-        return $this;
     }
 
     public function getLink(): ?string
@@ -57,23 +51,9 @@ class Download {
         return $this->link;
     }
 
-    public function setLink(string $link): static
-    {
-        $this->link = $link;
-
-        return $this;
-    }
-
     public function getFormat(): ?DownloadFormat
     {
         return $this->format;
-    }
-
-    public function setFormat(DownloadFormat $format): static
-    {
-        $this->format = $format;
-
-        return $this;
     }
 
     public function getQuality(): ?DownloadQuality
@@ -81,23 +61,9 @@ class Download {
         return $this->quality;
     }
 
-    public function setQuality(DownloadQuality $quality): static
-    {
-        $this->quality = $quality;
-
-        return $this;
-    }
-
     public function getFileName(): ?string
     {
         return $this->fileName;
-    }
-
-    public function setFileName(?string $fileName): static
-    {
-        $this->fileName = $fileName;
-
-        return $this;
     }
 
     public function getError(): ?string
@@ -105,23 +71,9 @@ class Download {
         return $this->error;
     }
 
-    public function setError(?string $error): static
-    {
-        $this->error = $error;
-
-        return $this;
-    }
-
     public function getState(): ?DownloadState
     {
         return $this->state;
-    }
-
-    public function setState(DownloadState $state): static
-    {
-        $this->state = $state;
-
-        return $this;
     }
 
     public function getCreatedAt(): ?\DateTimeImmutable
@@ -129,10 +81,8 @@ class Download {
         return $this->createdAt;
     }
 
-    public function setCreatedAt(\DateTimeImmutable $createdAt): static
+    public function getQueuePosition(): ?int
     {
-        $this->createdAt = $createdAt;
-
-        return $this;
+        return $this->queuePosition;
     }
 }

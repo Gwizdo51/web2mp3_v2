@@ -4,12 +4,14 @@ namespace App\Service;
 
 use App\ApiResource\DownloadRequest;
 use App\Entity\Download;
+use App\Entity\DownloadView;
 use App\Enum\DownloadQuality;
 use App\Enum\DownloadState;
 use App\Message\BroadcastQueueUpdateMessage;
 use App\Message\ConvertVideoToAudioMessage;
 use App\Message\DeleteFileMessage;
 use App\Repository\DownloadRepository;
+use App\Repository\DownloadViewRepository;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
@@ -30,6 +32,7 @@ class DownloadService {
         protected readonly EntityManagerInterface $em,
         protected readonly MessageBusInterface $bus,
         protected readonly DownloadRepository $downloadRepository,
+        protected readonly DownloadViewRepository $downloadViewRepository,
         protected readonly HubInterface $hub,
         #[Autowire(env: 'DEFAULT_URI')]
         protected readonly string $defaultUri,
@@ -48,16 +51,13 @@ class DownloadService {
     public function processDownloadRequest(DownloadRequest $downloadRequest): DownloadRequest {
         $this->logger->info('{method} - New download request received', ['method' => __METHOD__, '$downloadRequest' => $downloadRequest]);
         // check if another download has the same parameters
-        $sameDownload = $this->downloadRepository->findSameDownload($downloadRequest);
+        $sameDownload = $this->downloadViewRepository->findSameDownload($downloadRequest);
         if ($sameDownload !== null) {
             // send the download found to the user
             $downloadRequest->id = $sameDownload->getId();
             $downloadRequest->state = $sameDownload->getState();
             $downloadRequest->fileName = $sameDownload->getFileName();
-            // get the queue position of the download message
-            $queuePosition = $this->downloadRepository->getQueuePosition($sameDownload->getCreatedAt());
-            // dump('queue position :', $queuePosition);
-            $downloadRequest->queuePosition = $queuePosition;
+            $downloadRequest->queuePosition = $sameDownload->getQueuePosition();
             $this->logger->info('{method} - Same download found', ['method' => __METHOD__, '$sameDownload' => $downloadRequest]);
         }
         else {
@@ -76,8 +76,9 @@ class DownloadService {
             $downloadRequest->id = $newDownload->getId();
             $downloadRequest->state = $newDownload->getState();
             // get the queue position of the download message
-            $queuePosition = $this->downloadRepository->getQueuePosition($now);
-            $downloadRequest->queuePosition = $queuePosition;
+            /** @var DownloadView */
+            $newDownloadView = $this->downloadViewRepository->find($newDownload->getId());
+            $downloadRequest->queuePosition = $newDownloadView->getQueuePosition();
             // dispatch the message to download the link
             $this->logger->info('{method} - Same download not found, dispatching message', ['method' => __METHOD__, '$downloadRequest' => $downloadRequest]);
             $this->bus->dispatch(new ConvertVideoToAudioMessage($downloadRequest));
@@ -151,7 +152,6 @@ class DownloadService {
     protected function broadcastUpdate(DownloadRequest $downloadRequest) {
         $this->logger->info('{method} - Broadcasting update', ['method' => __METHOD__, '$downloadRequest' => $downloadRequest]);
         $jsonContent = $this->serializer->serialize($downloadRequest, 'json', ['groups' => ['download_request:get']]);
-        dump('broadcasting update', $jsonContent);
         $this->hub->publish(new Update(
             topics: "{$this->defaultUri}/downloads/{$downloadRequest->id}",
             data: $jsonContent,
@@ -170,16 +170,16 @@ class DownloadService {
 
     public function broadcastQueueUpdate(): void {
         // retrieve all the downloads in waiting state, along with their queue positions
-        $queuePositionsArray = $this->downloadRepository->getWaitingDownloadsQueuePositions();
-        $this->logger->info('{method} - Broadcasting queue position updates', ['method' => __METHOD__, 'queuePositionsArray' => $queuePositionsArray]);
-        foreach ($queuePositionsArray as $queuePositionArray) {
+        /** @var array<DownloadView> */
+        $waitingDownloads = $this->downloadViewRepository->findBy(['state' => DownloadState::Waiting]);
+        $this->logger->info('{method} - Broadcasting queue position updates', ['method' => __METHOD__, 'waitingDownloads' => $waitingDownloads]);
+        foreach ($waitingDownloads as $waitingDownload) {
             // create a DownloadRequest object and broadcast it via Mercure
-            $downloadRequest = new DownloadRequest(
-                id: $queuePositionArray['download']['id'],
-                state: $queuePositionArray['download']['state'],
-                queuePosition: $queuePositionArray['queuePosition'],
-            );
-            $this->broadcastUpdate($downloadRequest);
+            $this->broadcastUpdate(new DownloadRequest(
+                id: $waitingDownload->getId(),
+                state: $waitingDownload->getState(),
+                queuePosition: $waitingDownload->getQueuePosition(),
+            ));
         }
     }
 

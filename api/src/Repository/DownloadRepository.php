@@ -42,59 +42,59 @@ class DownloadRepository extends ServiceEntityRepository {
 //        ;
 //    }
 
-    public function findSameDownload(DownloadRequest $downloadRequest): ?Download {
-        $qb = $this->createQueryBuilder('d');
-        return $qb
-            ->andWhere('d.link = :link')
-            ->setParameter('link', $downloadRequest->link)
-            ->andWhere('d.format = :format')
-            ->setParameter('format', $downloadRequest->format)
-            ->andWhere('d.quality = :quality')
-            ->setParameter('quality', $downloadRequest->quality)
-            ->andWhere($qb->expr()->in('d.state', [
-                DownloadState::Waiting->value,
-                DownloadState::Running->value,
-                DownloadState::Succeeded->value,
-            ]))
-            ->setMaxResults(1)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
-    }
+    // public function findSameDownload(DownloadRequest $downloadRequest): ?Download {
+    //     $qb = $this->createQueryBuilder('d');
+    //     return $qb
+    //         ->andWhere('d.link = :link')
+    //         ->setParameter('link', $downloadRequest->link)
+    //         ->andWhere('d.format = :format')
+    //         ->setParameter('format', $downloadRequest->format)
+    //         ->andWhere('d.quality = :quality')
+    //         ->setParameter('quality', $downloadRequest->quality)
+    //         ->andWhere($qb->expr()->in('d.state', [
+    //             DownloadState::Waiting->value,
+    //             DownloadState::Running->value,
+    //             DownloadState::Succeeded->value,
+    //         ]))
+    //         ->setMaxResults(1)
+    //         ->getQuery()
+    //         ->getOneOrNullResult()
+    //     ;
+    // }
 
-    public function getQueuePosition(DateTimeImmutable $createdAt): int {
-        $qb = $this->createQueryBuilder('d');
-        return $qb
-            ->andWhere('d.createdAt < :created_at')
-            ->setParameter('created_at', $createdAt)
-            ->andWhere($qb->expr()->in('d.state', [
-                DownloadState::Waiting->value,
-                DownloadState::Running->value,
-            ]))
-            ->select('COUNT(d.id)')
-            ->getQuery()
-            ->getSingleScalarResult()
-        ;
-    }
+    // public function getQueuePosition(DateTimeImmutable $createdAt): int {
+    //     $qb = $this->createQueryBuilder('d');
+    //     return $qb
+    //         ->andWhere('d.createdAt < :created_at')
+    //         ->setParameter('created_at', $createdAt)
+    //         ->andWhere($qb->expr()->in('d.state', [
+    //             DownloadState::Waiting->value,
+    //             DownloadState::Running->value,
+    //         ]))
+    //         ->select('COUNT(d.id)')
+    //         ->getQuery()
+    //         ->getSingleScalarResult()
+    //     ;
+    // }
 
-    public function getWaitingDownloadsQueuePositions(): array {
-        $qb = $this->createQueryBuilder('d2');
-        $subquery = $qb
-            ->andWhere('d2.createdAt < d1.createdAt')
-            ->andWhere($qb->expr()->in('d2.state', [
-                DownloadState::Waiting->value,
-                DownloadState::Running->value,
-            ]))
-            ->select('COUNT(d2.id)')
-            ->getDQL()
-        ;
-        $waitingState = DownloadState::Waiting->value;
-        return $this->createQueryBuilder('d1')
-            ->select('d1 download')
-            ->addSelect("({$subquery}) queuePosition")
-            ->andWhere("d1.state = '{$waitingState}'")
-            ->getQuery()
-            ->getArrayResult()
-        ;
-    }
+    // public function getWaitingDownloadsQueuePositions(): array {
+    //     $qb = $this->createQueryBuilder('d2');
+    //     $subquery = $qb
+    //         ->andWhere('d2.createdAt < d1.createdAt')
+    //         ->andWhere($qb->expr()->in('d2.state', [
+    //             DownloadState::Waiting->value,
+    //             DownloadState::Running->value,
+    //         ]))
+    //         ->select('COUNT(d2.id)')
+    //         ->getDQL()
+    //     ;
+    //     $waitingState = DownloadState::Waiting->value;
+    //     return $this->createQueryBuilder('d1')
+    //         ->select('d1 download')
+    //         ->addSelect("({$subquery}) queuePosition")
+    //         ->andWhere("d1.state = '{$waitingState}'")
+    //         ->getQuery()
+    //         ->getArrayResult()
+    //     ;
+    // }
 }
